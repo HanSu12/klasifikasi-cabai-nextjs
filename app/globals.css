@@ -24,3 +24,23 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Tambahan transisi untuk menu burger (opsional, jika ingin override atau tambahan) */
+.burger-menu-enter {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+.burger-menu-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s, transform 0.3s;
+}
+.burger-menu-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+.burger-menu-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.3s, transform 0.3s;
+}

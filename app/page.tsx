@@ -38,6 +38,11 @@ export default function Home() {
   const [history, setHistory] = useState<PredictionResult[]>([]);
   const [isHowToModalOpen, setIsHowToModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  // Tambahkan state untuk burger menu
+  const [isNavOpen, setIsNavOpen] = useState(false);
+
+  // Handler untuk toggle burger menu
+  const handleNavToggle = () => setIsNavOpen((prev) => !prev);
 
   useEffect(() => {
     try {
@@ -190,9 +195,20 @@ export default function Home() {
                 Klasifikasi Cabai
               </h1>
             </div>
-            <div className="flex items-center gap-4 text-sm font-medium">
-                <button onClick={() => setIsHowToModalOpen(true)} className="text-gray-300 hover:text-white transition-colors">Cara Penggunaan</button>
-                <button onClick={() => setIsAboutModalOpen(true)} className="text-gray-300 hover:text-white transition-colors">Tentang</button>
+            {/* Burger menu button (mobile only) */}
+            <button
+              className="md:hidden flex flex-col justify-center items-center w-10 h-10 text-gray-300 hover:text-white focus:outline-none"
+              aria-label="Toggle navigation menu"
+              onClick={handleNavToggle}
+            >
+              <span className={`block w-6 h-0.5 bg-current mb-1 transition-all duration-300 ${isNavOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
+              <span className={`block w-6 h-0.5 bg-current mb-1 transition-all duration-300 ${isNavOpen ? 'opacity-0' : ''}`}></span>
+              <span className={`block w-6 h-0.5 bg-current transition-all duration-300 ${isNavOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
+            </button>
+            {/* Menu utama */}
+            <div className={`flex-col md:flex-row md:flex items-center gap-4 text-sm font-medium absolute md:static top-full left-0 w-full md:w-auto bg-slate-800 md:bg-transparent border-t md:border-0 border-slate-700 md:opacity-100 transition-all duration-300 z-20 ${isNavOpen ? 'flex' : 'hidden'} md:flex`}>
+                <button onClick={() => { setIsHowToModalOpen(true); setIsNavOpen(false); }} className="text-gray-300 hover:text-white transition-colors w-full md:w-auto text-left md:text-center py-3 md:py-0 px-6 md:px-0">Cara Penggunaan</button>
+                <button onClick={() => { setIsAboutModalOpen(true); setIsNavOpen(false); }} className="text-gray-300 hover:text-white transition-colors w-full md:w-auto text-left md:text-center py-3 md:py-0 px-6 md:px-0">Tentang</button>
             </div>
         </div>
       </header>
