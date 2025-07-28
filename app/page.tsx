@@ -61,7 +61,7 @@ export default function Home() {
     setError(null);
     const formData = new FormData();
     formData.append('image', file);
-    const API_URL = 'http://127.0.0.1:5000/predict';
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000/predict';
 
     try {
       const response = await fetch(API_URL, { method: 'POST', body: formData });
