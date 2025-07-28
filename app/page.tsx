@@ -12,7 +12,7 @@ type PredictionResult = {
   kadar_air: string;
 };
 
-// --- (Komponen Modal tidak perlu diubah, biarkan seperti adanya) ---
+// Komponen Modal (Pop-up)
 const Modal = ({ isOpen, onClose, title, children }: { isOpen: boolean, onClose: () => void, title: string, children: React.ReactNode }) => {
   if (!isOpen) return null;
   return (
@@ -108,8 +108,7 @@ export default function Home() {
       default: return 'gray-400';
     }
   };
-  
-  // ===== PERUBAHAN UTAMA: Konten Saran Perawatan Lebih Kompleks =====
+
   const getCareTips = (prediction: string = '') => {
       switch (prediction.toLowerCase()) {
           case 'segar':
@@ -183,7 +182,6 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-900 text-gray-200">
-      {/* --- (Bagian Header tidak berubah) --- */}
       <header className="bg-slate-800/80 backdrop-blur-sm border-b border-slate-700 p-4 sticky top-0 z-10">
         <div className="container mx-auto flex justify-between items-center">
             <div className="flex items-center gap-4">
@@ -200,7 +198,6 @@ export default function Home() {
       </header>
 
       <main className="flex-grow container mx-auto p-4 md:p-8">
-        {/* --- (Bagian Grid Utama tidak berubah) --- */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2 bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-lg flex flex-col items-center justify-center h-full">
             <h2 className="text-2xl font-bold mb-4 self-start text-white">1. Unggah Gambar</h2>
@@ -245,7 +242,6 @@ export default function Home() {
           </div>
         </div>
         
-        {/* ===== PERUBAHAN UTAMA: Menampilkan Saran Perawatan yang Lebih Kompleks ===== */}
         {careTips && (
             <div className="mt-8 bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-lg animate-fade-in">
                 <h2 className="text-2xl font-bold mb-4 text-white">{careTips.title}</h2>
@@ -262,7 +258,6 @@ export default function Home() {
             </div>
         )}
 
-        {/* --- (Bagian Riwayat tidak berubah) --- */}
         {history.length > 0 && (
             <div className="mt-8 bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-lg">
                 <h2 className="text-2xl font-bold mb-4 text-white">Riwayat Analisis Terakhir</h2>
@@ -279,10 +274,10 @@ export default function Home() {
         )}
       </main>
       
-      {/* --- (Bagian Footer & Modal tidak berubah) --- */}
       <footer className="text-center p-4 text-slate-500 text-sm">
         Dibuat dengan Next.js dan Tailwind CSS
       </footer>
+      
       <Modal isOpen={isHowToModalOpen} onClose={() => setIsHowToModalOpen(false)} title="Cara Penggunaan">
           <ol className="list-decimal list-inside space-y-3 text-slate-300">
               <li>Klik tombol "Pilih File" atau area unggah untuk memilih gambar cabai dari perangkat Anda.</li>
@@ -297,6 +292,16 @@ export default function Home() {
               Aplikasi ini adalah sebuah sistem cerdas yang memanfaatkan teknologi Machine Learning untuk mengklasifikasikan tingkat kekeringan cabai berdasarkan citra digital. Tujuannya adalah untuk membantu petani dan pedagang dalam mengidentifikasi kualitas cabai secara cepat dan akurat.
           </p>
       </Modal>
+
+      {/* ===== INI ADALAH PERBAIKANNYA ===== */}
+      <div className="hidden">
+        <span className="text-green-400 border-green-400 bg-green-400/80 bg-green-400"></span>
+        <span className="text-yellow-400 border-yellow-400 bg-yellow-400/80 bg-yellow-400"></span>
+        <span className="text-red-500 border-red-500 bg-red-500/80 bg-red-500"></span>
+        <span className="text-gray-400 border-gray-400 bg-gray-400/80 bg-gray-400"></span>
+        <span className="bg-sky-500/80"></span>
+      </div>
+
     </div>
   );
 }
