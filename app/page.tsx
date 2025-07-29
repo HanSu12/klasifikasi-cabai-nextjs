@@ -2,9 +2,9 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, Fragment } from 'react';
+import { useState, useEffect, useCallback, DragEvent } from 'react'; // Tambahkan DragEvent
 
-// Definisikan tipe data
+// ... (Komponen Modal dan tipe data tidak berubah) ...
 type PredictionResult = {
   prediction: string;
   confidence: string;
@@ -12,7 +12,6 @@ type PredictionResult = {
   kadar_air: string;
 };
 
-// Komponen Modal (Pop-up)
 const Modal = ({ isOpen, onClose, title, children }: { isOpen: boolean, onClose: () => void, title: string, children: React.ReactNode }) => {
   if (!isOpen) return null;
   return (
@@ -38,11 +37,10 @@ export default function Home() {
   const [history, setHistory] = useState<PredictionResult[]>([]);
   const [isHowToModalOpen, setIsHowToModalOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
-  // Tambahkan state untuk burger menu
-  const [isNavOpen, setIsNavOpen] = useState(false);
+  
+  // ===== BAGIAN BARU 1: State untuk drag-and-drop =====
+  const [isDragging, setIsDragging] = useState(false);
 
-  // Handler untuk toggle burger menu
-  const handleNavToggle = () => setIsNavOpen((prev) => !prev);
 
   useEffect(() => {
     try {
@@ -83,16 +81,40 @@ export default function Home() {
     }
   }, [history]);
 
-  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
+  // Fungsi ini sekarang hanya akan menangani file, bukan event
+  const processFile = useCallback((file: File) => {
       setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => setPreview(reader.result as string);
       reader.readAsDataURL(file);
       handlePredict(file);
-    }
   }, [handlePredict]);
+  
+  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      processFile(event.target.files[0]);
+    }
+  }, [processFile]);
+
+  // ===== BAGIAN BARU 2: Fungsi-fungsi handler untuk drag-and-drop =====
+  const handleDragOver = (event: DragEvent<HTMLLabelElement>) => {
+      event.preventDefault(); // Mencegah browser membuka file
+      setIsDragging(true);
+  };
+  
+  const handleDragLeave = (event: DragEvent<HTMLLabelElement>) => {
+      event.preventDefault();
+      setIsDragging(false);
+  };
+  
+  const handleDrop = (event: DragEvent<HTMLLabelElement>) => {
+      event.preventDefault();
+      setIsDragging(false);
+      if (event.dataTransfer.files && event.dataTransfer.files[0]) {
+          processFile(event.dataTransfer.files[0]);
+      }
+  };
+
 
   const handleReset = () => {
     setSelectedFile(null);
@@ -113,74 +135,36 @@ export default function Home() {
       default: return 'gray-400';
     }
   };
-
+  
   const getCareTips = (prediction: string = '') => {
-      switch (prediction.toLowerCase()) {
-          case 'segar':
-              return {
-                  title: 'Panduan Lengkap Perawatan Cabai Segar',
-                  sections: [
-                      {
-                          subtitle: 'Penyimpanan Jangka Pendek (1-2 Minggu)',
-                          tips: [
-                              "Simpan di dalam kulkas pada laci sayuran (crisper drawer).",
-                              "Gunakan kantong jaring atau plastik berlubang untuk sirkulasi udara.",
-                              "Jangan dicuci! Cuci cabai hanya sesaat sebelum digunakan untuk mencegah pembusukan."
-                          ]
-                      },
-                      {
-                          subtitle: 'Penyimpanan Jangka Panjang (Hingga 1 Tahun)',
-                          tips: [
-                              "Bekukan cabai secara utuh di dalam wadah kedap udara atau freezer bag.",
-                              "Untuk bumbu praktis, blender cabai dengan sedikit minyak lalu bekukan dalam cetakan es batu.",
-                          ]
-                      }
-                  ]
-              };
-          case 'sedang':
-              return {
-                  title: 'Panduan Lengkap Cabai Setengah Kering',
-                  sections: [
-                       {
-                          subtitle: 'Tindakan Segera',
-                          tips: [
-                              "Cabai dalam kondisi ini rentan berjamur. Segera proses lebih lanjut.",
-                              "Gunakan langsung sebagai bahan masakan untuk mendapatkan aroma terbaik.",
-                          ]
-                      },
-                      {
-                          subtitle: 'Proses Pengeringan Lanjutan',
-                          tips: [
-                              "Jemur di bawah sinar matahari langsung selama 1-2 hari.",
-                              "Atau, sangrai di wajan dengan api sangat kecil tanpa minyak hingga benar-benar kering.",
-                          ]
-                      }
-                  ]
-              };
-          case 'kering':
-              return {
-                  title: 'Panduan Lengkap Perawatan Cabai Kering',
-                  sections: [
-                       {
-                          subtitle: 'Penyimpanan Optimal',
-                          tips: [
-                              "Simpan dalam wadah kedap udara (toples kaca) di tempat yang gelap, sejuk, dan kering.",
-                              "Masukkan beberapa butir beras atau silica gel (food grade) untuk menyerap kelembapan.",
-                              "Cabai kering yang disimpan dengan benar bisa bertahan lebih dari satu tahun.",
-                          ]
-                      },
-                      {
-                          subtitle: 'Tips Penggunaan',
-                          tips: [
-                              "Untuk aroma maksimal, sangrai sebentar sebelum dihaluskan.",
-                              "Rendam dengan air panas selama 10 menit untuk melunakkan sebelum diolah.",
-                          ]
-                      }
-                  ]
-              };
-          default:
-              return null;
-      }
+    switch (prediction.toLowerCase()) {
+        case 'segar':
+            return {
+                title: 'Panduan Lengkap Perawatan Cabai Segar',
+                sections: [
+                    { subtitle: 'Penyimpanan Jangka Pendek (1-2 Minggu)', tips: [ "Simpan di dalam kulkas pada laci sayuran (crisper drawer).", "Gunakan kantong jaring atau plastik berlubang untuk sirkulasi udara.", "Jangan dicuci! Cuci cabai hanya sesaat sebelum digunakan untuk mencegah pembusukan." ] },
+                    { subtitle: 'Penyimpanan Jangka Panjang (Hingga 1 Tahun)', tips: [ "Bekukan cabai secara utuh di dalam wadah kedap udara atau freezer bag.", "Untuk bumbu praktis, blender cabai dengan sedikit minyak lalu bekukan dalam cetakan es batu.", ] }
+                ]
+            };
+        case 'sedang':
+            return {
+                title: 'Panduan Lengkap Cabai Setengah Kering',
+                sections: [
+                    { subtitle: 'Tindakan Segera', tips: [ "Cabai dalam kondisi ini rentan berjamur. Segera proses lebih lanjut.", "Gunakan langsung sebagai bahan masakan untuk mendapatkan aroma terbaik.", ] },
+                    { subtitle: 'Proses Pengeringan Lanjutan', tips: [ "Jemur di bawah sinar matahari langsung selama 1-2 hari.", "Atau, sangrai di wajan dengan api sangat kecil tanpa minyak hingga benar-benar kering.", ] }
+                ]
+            };
+        case 'kering':
+            return {
+                title: 'Panduan Lengkap Perawatan Cabai Kering',
+                sections: [
+                    { subtitle: 'Penyimpanan Optimal', tips: [ "Simpan dalam wadah kedap udara (toples kaca) di tempat yang gelap, sejuk, dan kering.", "Masukkan beberapa butir beras atau silica gel (food grade) untuk menyerap kelembapan.", "Cabai kering yang disimpan dengan benar bisa bertahan lebih dari satu tahun.", ] },
+                    { subtitle: 'Tips Penggunaan', tips: [ "Untuk aroma maksimal, sangrai sebentar sebelum dihaluskan.", "Rendam dengan air panas selama 10 menit untuk melunakkan sebelum diolah.", ] }
+                ]
+            };
+        default:
+            return null;
+    }
   };
 
   const careTips = result ? getCareTips(result.prediction) : null;
@@ -195,41 +179,57 @@ export default function Home() {
                 Klasifikasi Cabai
               </h1>
             </div>
-            {/* Burger menu button (mobile only) */}
-            <button
-              className="md:hidden flex flex-col justify-center items-center w-10 h-10 text-gray-300 hover:text-white focus:outline-none"
-              aria-label="Toggle navigation menu"
-              onClick={handleNavToggle}
-            >
-              <span className={`block w-6 h-0.5 bg-current mb-1 transition-all duration-300 ${isNavOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
-              <span className={`block w-6 h-0.5 bg-current mb-1 transition-all duration-300 ${isNavOpen ? 'opacity-0' : ''}`}></span>
-              <span className={`block w-6 h-0.5 bg-current transition-all duration-300 ${isNavOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
-            </button>
-            {/* Menu utama */}
-            <div className={`flex-col md:flex-row md:flex items-center gap-4 text-sm font-medium absolute md:static top-full left-0 w-full md:w-auto bg-slate-800 md:bg-transparent border-t md:border-0 border-slate-700 md:opacity-100 transition-all duration-300 z-20 ${isNavOpen ? 'flex' : 'hidden'} md:flex`}>
-                <button onClick={() => { setIsHowToModalOpen(true); setIsNavOpen(false); }} className="text-gray-300 hover:text-white transition-colors w-full md:w-auto text-left md:text-center py-3 md:py-0 px-6 md:px-0">Cara Penggunaan</button>
-                <button onClick={() => { setIsAboutModalOpen(true); setIsNavOpen(false); }} className="text-gray-300 hover:text-white transition-colors w-full md:w-auto text-left md:text-center py-3 md:py-0 px-6 md:px-0">Tentang</button>
+            <div className="flex items-center gap-4 text-sm font-medium">
+                <button onClick={() => setIsHowToModalOpen(true)} className="text-gray-300 hover:text-white transition-colors">Cara Penggunaan</button>
+                <button onClick={() => setIsAboutModalOpen(true)} className="text-gray-300 hover:text-white transition-colors">Tentang</button>
             </div>
         </div>
       </header>
 
       <main className="flex-grow container mx-auto p-4 md:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          
           <div className="lg:col-span-2 bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-lg flex flex-col items-center justify-center h-full">
             <h2 className="text-2xl font-bold mb-4 self-start text-white">1. Unggah Gambar</h2>
             {!preview ? (
-              <label htmlFor="file-upload" className="w-full h-64 border-2 border-dashed border-slate-600 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer hover:bg-slate-700/50 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 text-slate-500"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
-                <span className="mt-2 text-sm font-medium text-slate-400">Klik untuk memilih file</span>
-                <input type="file" id="file-upload" className="hidden" accept="image/*" onChange={handleFileChange} />
+              // ===== BAGIAN BARU 3: Menambahkan event handler ke label =====
+              <label
+                htmlFor="file-upload"
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`w-full h-64 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${
+                  isDragging ? 'bg-slate-700/80 border-sky-400' : 'border-slate-600 hover:bg-slate-700/50'
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 text-slate-500">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                </svg>
+                <span className="mt-2 text-sm font-medium text-slate-400">
+                  {isDragging ? 'Lepaskan file di sini' : 'Klik atau seret file ke sini'}
+                </span>
+                <input
+                  type="file"
+                  id="file-upload"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                />
               </label>
             ) : (
               <div className="w-full text-center">
                 <img src={preview} alt="Preview" className="max-h-64 w-auto mx-auto rounded-lg mb-4 shadow-md" />
-                <button onClick={handleReset} className="bg-slate-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-slate-700 transition-transform hover:scale-105">Pilih Gambar Lain</button>
+                <button
+                  onClick={handleReset}
+                  className="bg-slate-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-slate-700 transition-transform hover:scale-105"
+                >
+                  Pilih Gambar Lain
+                </button>
               </div>
             )}
           </div>
+
+          {/* ... (Sisa kode tidak ada perubahan signifikan) ... */}
           <div className="lg:col-span-3 bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-lg flex flex-col justify-center min-h-[400px]">
               <h2 className="text-2xl font-bold mb-4 text-white">2. Hasil Analisis</h2>
               <div className="flex items-center justify-center h-full">
@@ -296,10 +296,9 @@ export default function Home() {
       
       <Modal isOpen={isHowToModalOpen} onClose={() => setIsHowToModalOpen(false)} title="Cara Penggunaan">
           <ol className="list-decimal list-inside space-y-3 text-slate-300">
-              <li>Klik tombol "Pilih File" atau area unggah untuk memilih gambar cabai dari perangkat Anda.</li>
-              <li>Aplikasi akan secara otomatis memulai proses analisis setelah gambar dipilih.</li>
-              <li>Hasil analisis, tingkat keyakinan, dan detail probabilitas akan muncul di panel kanan.</li>
-              <li>Di bawah hasil, Anda akan mendapatkan saran perawatan yang sesuai dengan kondisi cabai.</li>
+              <li>Klik area unggah atau seret file gambar cabai ke dalamnya.</li>
+              <li>Aplikasi akan secara otomatis memulai proses analisis.</li>
+              <li>Hasil, saran perawatan, dan riwayat akan muncul di halaman.</li>
               <li>Untuk menganalisis gambar lain, klik tombol "Pilih Gambar Lain".</li>
           </ol>
       </Modal>
@@ -309,7 +308,6 @@ export default function Home() {
           </p>
       </Modal>
 
-      {/* ===== INI ADALAH PERBAIKANNYA ===== */}
       <div className="hidden">
         <span className="text-green-400 border-green-400 bg-green-400/80 bg-green-400"></span>
         <span className="text-yellow-400 border-yellow-400 bg-yellow-400/80 bg-yellow-400"></span>
